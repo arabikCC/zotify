@@ -154,7 +154,7 @@ class Playable:
                         sleep(delta_required - delta_current)
         return LocalFile(Path(file), AudioFormat.MP3)
 
-    def get_cover_art(self, size: ImageSize = ImageSize.LARGE) -> bytes:
+    def get_cover_art(self, size: ImageSize = ImageSize.MEDIUM) -> bytes:
         """
         Returns image data of cover art
         Args:
