@@ -3,7 +3,7 @@ from pathlib import Path
 from time import time, sleep
 
 from librespot.core import PlayableContentFeeder
-from librespot.metadata import AlbumId
+from librespot.metadata import AlbumId, ArtistId
 from librespot.proto import Metadata_pb2 as Metadata
 from librespot.structure import GeneralAudioStream
 from librespot.util import bytes_to_hex
@@ -26,8 +26,8 @@ LYRICS_URL = "https://sp" + "client.wg.sp" + "otify.com/color-lyrics/v2/track/"
 class Lyrics:
     def __init__(self, lyrics: dict, **kwargs):
         self.__lines = []
-        self.__sync_type = lyrics["syncType"]
-        for line in lyrics["lines"]:
+        self.__sync_type = lyrics["lyrics"]["syncType"]
+        for line in lyrics["lyrics"]["lines"]:
             self.__lines.append(line["words"] + "\n")
         if self.__sync_type == "line_synced":
             self.__lines_synced = []
@@ -108,7 +108,7 @@ class Playable:
                 pass
 
             if f_spotid != spotid:
-                file_path = Path(f"{file_path} (SpotId:{spotid[-5:]})")
+                file_path = Path(f"{file_path} (SpotId-{spotid[-5:]})")
             else:
                 if not replace:
                     raise FileExistsError("File already downloaded")
@@ -190,9 +190,13 @@ class Track(PlayableContentFeeder.LoadedStream, Playable):
     def __default_metadata(self) -> list[MetadataEntry]:
         date = self.album.date
         if not hasattr(self.album, "genre"):
-            self.track.album = self.__api().get_metadata_4_album(
+            self.track.album = self.__api.get_metadata_4_album(
                 AlbumId.from_hex(bytes_to_hex(self.album.gid))
             )
+
+        # Get disc total if available
+        disc_total = len(self.album.disc) if hasattr(self.album, "disc") else 1
+
         return [
             MetadataEntry("album", self.album.name),
             MetadataEntry("album_artist", self.album.artist[0].name),
@@ -201,6 +205,8 @@ class Track(PlayableContentFeeder.LoadedStream, Playable):
             MetadataEntry("artists", [a.name for a in self.artist]),
             MetadataEntry("date", f"{date.year}-{date.month}-{date.day}"),
             MetadataEntry("disc", self.disc_number),
+            MetadataEntry("discnumber", self.disc_number),
+            MetadataEntry("disctotal", disc_total),
             MetadataEntry("duration", self.duration),
             MetadataEntry("explicit", self.explicit, "[E]" if self.explicit else ""),
             MetadataEntry("isrc", self.external_id[0].id),
@@ -232,12 +238,31 @@ class Track(PlayableContentFeeder.LoadedStream, Playable):
         try:
             return self.__lyrics
         except AttributeError:
+            lyrics_request = (
+                "/image/https%3A%2F%2Fi.scdn.co%2Fimage%2F"
+                + str(bytes_to_hex(self.cover_images[ImageSize.LARGE].file_id))
+                + "?format=json&vocalRemoval=false&market=from_token"
+            )
             self.__lyrics = Lyrics(
-                self.__api.invoke_url(LYRICS_URL + bytes_to_base62(self.track.gid))[
-                    "lyrics"
-                ]
+                self.__api.invoke_url(
+                    LYRICS_URL + bytes_to_base62(self.track.gid) + lyrics_request,
+                    raw_url=True,
+                )
             )
             return self.__lyrics
+
+    def add_genre(self) -> None:
+        if hasattr(self.album, "genre") and len(self.album.genre) != 0:
+            genre = self.album.genre
+        else:
+            artist_metadata = self.__api.get_metadata_4_artist(
+                ArtistId.from_hex(bytes_to_hex(self.artist[0].gid))
+            )
+            genre = artist_metadata.genre
+
+        self.metadata.extend(
+            [MetadataEntry("genre", genre[0] if len(genre) > 0 else "None")]
+        )
 
 
 class Episode(PlayableContentFeeder.LoadedStream, Playable):

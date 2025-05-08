@@ -26,7 +26,6 @@ OUTPUT_PLAYLIST_TRACK = "output_playlist_track"
 OUTPUT_PLAYLIST_EPISODE = "output_playlist_episode"
 OUTPUT_PODCAST = "output_podcast"
 OUTPUT_SINGLE = "output_single"
-PATH_ARCHIVE = "path_archive"
 PLAYLIST_LIBRARY = "playlist_library"
 PODCAST_LIBRARY = "podcast_library"
 PRINT_DOWNLOADS = "print_downloads"
@@ -35,6 +34,7 @@ PRINT_PROGRESS = "print_progress"
 PRINT_SKIPS = "print_skips"
 PRINT_WARNINGS = "print_warnings"
 REPLACE_EXISTING = "replace_existing"
+SAVE_GENRE = "save_genre"
 SAVE_METADATA = "save_metadata"
 SAVE_SUBTITLES = "save_subtitles"
 SKIP_DUPLICATES = "skip_duplicates"
@@ -58,11 +58,10 @@ LIBRARY_PATHS = {
 CONFIG_PATHS = {
     "conf": SYSTEM_PATHS[PLATFORM].joinpath("config.json"),
     "creds": SYSTEM_PATHS[PLATFORM].joinpath("credentials.json"),
-    "archive": SYSTEM_PATHS[PLATFORM].joinpath("track_archive"),
 }
 
 OUTPUT_PATHS = {
-    "album": "{album_artist}/{album}/{track_number}. {artists} - {title}",
+    "album": "{album_artist}/{album}/Disc {discnumber}/{track_number}. {artists} - {title}",
     "podcast": "{podcast}/{episode_number} - {title}",
     "playlist_track": "{playlist}/{artists} - {title}",
     "playlist_episode": "{playlist}/{episode_number} - {title}",
@@ -74,12 +73,6 @@ CONFIG_VALUES = {
         "type": Path,
         "args": ["--credentials"],
         "help": "Path to credentials file",
-    },
-    PATH_ARCHIVE: {
-        "default": CONFIG_PATHS["archive"],
-        "type": Path,
-        "args": ["--archive"],
-        "help": "Path to track archive file",
     },
     ALBUM_LIBRARY: {
         "default": LIBRARY_PATHS["album"],
@@ -203,6 +196,12 @@ CONFIG_VALUES = {
         "type": bool,
         "args": ["--save-metadata"],
         "help": "Save metadata, required for other metadata options",
+    },
+    SAVE_GENRE: {
+        "default": False,
+        "type": bool,
+        "args": ["--save-genre"],
+        "help": "Add genre tag to metadata",
     },
     ALL_ARTISTS: {
         "default": True,
