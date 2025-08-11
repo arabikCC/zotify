@@ -24,24 +24,59 @@ Built on [Librespot](https://github.com/kokarare1212/librespot-python).
 
 Requires Python 3.11 or greater. \
 Optionally requires FFmpeg to save tracks as anything other than Ogg Vorbis.
-(FFmpeg installation instructions available [here](https://github.com/DraftKinner/zotify/blob/main/INSTALLATION.md))
+<details><summary>Full installation instructions with FFmpeg</summary>
+
+<details><summary>Windows</summary>
+
+This guide uses *Scoop* (https://scoop.sh) to simplify installing prerequisites and *pipx* to manage Zotify itself. 
+There are other ways to install and run Zotify on Windows but this is the official recommendation, other methods of installation will not receive support.
+
+- Open PowerShell (cmd will not work)
+- Install Scoop by running:
+  - `Set-ExecutionPolicy RemoteSigned -Scope CurrentUser`
+  - `irm get.scoop.sh | iex`
+- After installing scoop run: `scoop install python ffmpeg-shared git`
+- Install pipx:
+  - `python3 -m pip install --user pipx`
+  - `python3 -m pipx ensurepath`
+- Now close PowerShell and reopen it to ensure the pipx command is available. Proceed to install zotify using either of the commands below.
+</details>
+
+<details><summary>macOS</summary>
+
+- Open the Terminal app
+- Install *Homebrew* (https://brew.sh) by running: `/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"`
+- After installing Homebrew run: `brew install python@3.11 pipx ffmpeg git`
+- Setup pipx: `pipx ensurepath`
+- Proceed to install zotify using either of the commands below.
+</details>
+
+<details><summary>Linux (Most Popular Distributions)</summary>
+
+- Install `python3`, `pip` (if a separate package), `ffmpeg`, and `git` from your distribution's package manager or software center.
+- Then install pipx, either from your package manager or through pip with: `python3 -m pip install --user pipx`
+- Proceed to install zotify using either of the commands below.
+</details>
+
+</details>
+<br>
 
 Enter the following command in terminal to install the latest stable version of Zotify.
 ```text
-python -m pip install git+https://github.com/DraftKinner/zotify.git@v1.0.1
+python -m pip install git+https://github.com/DraftKinner/zotify.git@v1.1.1
 
 or
 
-pipx install git+https://github.com/DraftKinner/zotify.git@v1.0.1
+pipx install git+https://github.com/DraftKinner/zotify.git@v1.1.1
 ```
 
 Or to install the latest version, use:
 ```text
-python -m pip install git+https://github.com/DraftKinner/zotify.git
+python -m pip install git+https://github.com/DraftKinner/zotify.git@dev
 
 or
 
-pipx install git+https://github.com/DraftKinner/zotify.git
+pipx install git+https://github.com/DraftKinner/zotify.git@dev
 ```
 
 ## General Usage
@@ -66,24 +101,35 @@ Downloads specified items. Accepts any combination of track, album, playlist, ep
 | Config key              | Command line argument     | Description                                         | Default                                                    |
 | ----------------------- | ------------------------- | --------------------------------------------------- | ---------------------------------------------------------- |
 | path_credentials        | --credentials             | Path to credentials file                            |                                                            |
-| music_library           | --music-library           | Path to root of music library                       |                                                            |
+| album_library           | --album-library           | Path to root of album library                       |                                                            |
 | podcast_library         | --podcast-library         | Path to root of podcast library                     |                                                            |
-| mixed_playlist_library  | --mixed-playlist-library  | Path to root of mixed content playlist library      |                                                            |
+| playlist_library        | --playlist-library        | Path to root of playlist library                    |                                                            |
 | output_album            | --output-album            | File layout for saved albums                        | {album_artist}/{album}/{track_number}. {artists} - {title} |
 | output_playlist_track   | --output-playlist-track   | File layout for tracks in a playlist                | {playlist}/{playlist_number}. {artists} - {title}          |
 | output_playlist_episode | --output-playlist-episode | File layout for episodes in a playlist              | {playlist}/{playlist_number}. {episode_number} - {title}   |
 | output_podcast          | --output-podcast          | File layout for saved podcasts                      | {podcast}/{episode_number} - {title}                       |
 | download_quality        | --download-quality        | Audio download quality (auto for highest available) |                                                            |
 | download_real_time      | --download-real-time      | Downloads songs as fast as they would be played     |                                                            |
+| artwork_size            | --artwork-size            | Image size of track's cover art                     |                                                            |
 | audio_format            | --audio-format            | Audio format of final track output                  |                                                            |
 | transcode_bitrate       | --transcode-bitrate       | Transcoding bitrate (-1 to use download rate)       |                                                            |
 | ffmpeg_path             | --ffmpeg-path             | Path to ffmpeg binary                               |                                                            |
 | ffmpeg_args             | --ffmpeg-args             | Additional ffmpeg arguments when transcoding        |                                                            |
-| save_credentials        | --save-credentials        | Save login credentials to a file                    |                                                            |
+| language                | --language                | Language for metadata, ISO 639-1 language code      |                                                            |
+| lyrics_file             | --lyrics-file             | Save lyrics to a file                               |                                                            |
+| lyrics_only             | --lyrics-only             | Only download lyrics and not actual audio           |                                                            |
+| create_playlist_file    | --playlist-file           | Save playlist information to an m3u8 file           |                                                            |
+| save_metadata           | --save-metadata           | Save metadata, required for other metadata options  |                                                            |
+| save_genre              | --save-genre              | Add genre to metadata                               |                                                            |
+| all_artists             | --all-artists             | Add all track artists to artist tag in metadata     |                                                            |
 | replace_existing        | --replace-existing        | Redownload and replace songs if they already exist  |                                                            |
 | skip_previous           | --skip-previous           | Skip previously downloaded songs in the playlist    |                                                            |
 | skip_duplicates         | --skip-duplicates         | Skip downloading existing track to different album  |                                                            |
-| save_genre              | --save-genre              | Add genre to metadata                               |                                                            |
+| print_downloads         | --print-downloads         | Print messages when a song is finished downloading  |                                                            |
+| print_progress          | --print-progress          | Show progress bars                                  |                                                            |
+| print_skips             | --print-skips             | Show messages if a song is being skipped            |                                                            |
+| print_warnings          | --print-warnings          | Show warnings                                       |                                                            |
+| print_errors            | --print-errors            | Show errors                                         |                                                            |
 
 </details>
 
@@ -137,6 +183,8 @@ file.clean_filename()
 ## Contributing
 
 Pull requests are always welcome, but if adding an entirely new feature we encourage you to create an issue proposing the feature first so we can ensure it's something that fits the scope of the project.
+
+When reporting bugs or requesting features, ***PLEASE*** check current and closed issues first. Duplicates will be closed immediately.
 
 Zotify aims to be a comprehensive and user-friendly tool for downloading music and podcasts.
 It is designed to be simple by default but offer a high level of configuration for users that want it.

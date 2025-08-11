@@ -1,4 +1,21 @@
-# STILL IN DEVELOPMENT, EVERYTHING HERE IS SUBJECT TO CHANGE
+# Changelog
+
+## UNRELEASED
+
+### Changes
+
+- Changed artist downloads to include only albums and singles. Tracks in compilation and "Appears on" groups need to be filtered to only include those by the requested artist.
+
+### Additions
+- Added implementation for `--all-artists` as it was included as a config parameter but was unimplemented.
+- Added implementation for `--lyrics-only` as it was included as a config parameter but was unimplemented.
+- Added implementation for `--language` as it was included as a config parameter but was only partially implemented.
+- Added implementation for `--playlist-file` as it was included as a config parameter but was unimplemented.
+
+### Removals
+
+### Fixes
+- Fixed synced lyrics output not working
 
 ## v1.0.0 (Added in this fork)
 

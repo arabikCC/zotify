@@ -194,6 +194,8 @@ class Album(Collection):
     def __init__(self, b62_id: str, api: ApiClient, config: Config = Config()):
         super().__init__(api)
         album = api.get_metadata_4_album(AlbumId.from_base62(b62_id))
+        self.name = album.name
+
         total_discs = len(album.disc)
         for disc in album.disc:
             for track in disc.track:
@@ -219,18 +221,19 @@ class Artist(Collection):
     def __init__(self, b62_id: str, api: ApiClient, config: Config = Config()):
         super().__init__(api)
         artist = api.get_metadata_4_artist(ArtistId.from_base62(b62_id))
-        
-        # Process all content types: albums, singles, compilations, and appearances
+        self.name = artist.name
+
+        # Only include albums and singles for now. Other groups require filtering.
         all_groups = []
         if artist.album_group:
             all_groups.extend(artist.album_group)
         if artist.single_group:
             all_groups.extend(artist.single_group)
         if artist.compilation_group:
-            all_groups.extend(artist.compilation_group)
+            pass
         if artist.appears_on_group:
-            all_groups.extend(artist.appears_on_group)
-            
+            pass
+
         for album_group in all_groups:
             try:
                 album = api.get_metadata_4_album(
@@ -265,6 +268,8 @@ class Show(Collection):
     def __init__(self, b62_id: str, api: ApiClient, config: Config = Config()):
         super().__init__(api)
         show = api.get_metadata_4_show(ShowId.from_base62(b62_id))
+        self.name = show.name
+
         for episode in show.episode:
             metadata = [
                 MetadataEntry("spotid", bytes_to_base62(episode.gid)),
@@ -285,6 +290,8 @@ class Playlist(Collection):
     def __init__(self, b62_id: str, api: ApiClient, config: Config = Config()):
         super().__init__(api)
         playlist = api.get_playlist(PlaylistId(b62_id))
+        self.name = playlist.attributes.name
+
         for i in range(len(playlist.contents.items)):
             item = playlist.contents.items[i]
             split = item.uri.split(":")

@@ -341,6 +341,23 @@ class App:
         count = 0
         total = sum(len(c.playables) for c in collections)
         for collection in collections:
+            if self.__config.create_playlist_file and not isinstance(
+                collection, (Track, Episode)
+            ):
+                if collection.path is None:
+                    collection.set_path()
+                if isinstance(collection, Artist):
+                    # Make sure playlist file goes in the requested artist's folder as
+                    # discovery sometimes includes other artists as main contributor
+                    playlist_file = Path(
+                        f"{self.__config.album_library}/{collection.name}/{collection.name}.m3u8"
+                    )
+                else:
+                    playlist_file = Path(f"{collection.path}/{collection.name}.m3u8")
+                playlist_file.parent.mkdir(parents=True, exist_ok=True)
+                with open(playlist_file, "w", encoding="utf-8") as f:
+                    f.write("#EXTM3U\n")
+
             for playable in collection.playables:
                 count += 1
 
@@ -390,6 +407,11 @@ class App:
                 track.metadata.extend(playable.metadata)
                 if self.__config.save_genre:
                     track.add_genre()
+                if self.__config.all_artists:
+                    try:
+                        track.add_all_artists()
+                    except AttributeError:
+                        pass  # Episode
                 try:
                     output = track.create_output(
                         self.__config.audio_format.value.ext,
@@ -404,6 +426,22 @@ class App:
                     )
                     continue
 
+                # Download lyrics
+                self.download_lyrics(playable, track, output)
+                if self.__config.lyrics_only:
+                    if not self.__config.lyrics_file:
+                        Logger.log(
+                            LogChannel.WARNINGS,
+                            "Cannot use --lyrics-only parameter if --lyrics-file is false",
+                        )
+                        exit(0)
+                    Logger.log(
+                        LogChannel.DOWNLOADS,
+                        f"\nDownloaded {track.name} lyrics ({count}/{total})",
+                    )
+                    self.__session.rate_limiter.clear_consec_hits()
+                    continue
+
                 # Download track
                 with Logger.progress(
                     desc=f"({count}/{total}) {track.name}",
@@ -412,20 +450,6 @@ class App:
                     file = track.write_audio_stream(
                         output, p_bar, self.__config.download_real_time
                     )
-
-                # Download lyrics
-                if playable.type == PlayableType.TRACK and self.__config.lyrics_file:
-                    if not self.__session.is_premium():
-                        Logger.log(
-                            LogChannel.SKIPS,
-                            f'Failed to save lyrics for "{track.name}": Lyrics are only available to premium users',
-                        )
-                    else:
-                        with Loader("Fetching lyrics..."):
-                            try:
-                                track.get_lyrics().save(output)
-                            except FileNotFoundError as e:
-                                Logger.log(LogChannel.SKIPS, str(e))
                 Logger.log(
                     LogChannel.DOWNLOADS, f"\nDownloaded {track.name} ({count}/{total})"
                 )
@@ -462,6 +486,14 @@ class App:
                 # Reset rate limit counter for every successful download
                 self.__session.rate_limiter.clear_consec_hits()
 
+                # Add entry to playlist file
+                if self.__config.create_playlist_file and not isinstance(
+                    collection, (Track, Episode)
+                ):
+                    with open(playlist_file, "a", encoding="utf-8") as f:
+                        f.write(f"#EXTINF:{track.duration},\n")
+                        f.write(f"{output}.{self.__config.audio_format.value.ext}\n")
+
     def handle_exception(
         self,
         err: str,
@@ -483,3 +515,19 @@ class App:
         if "EX02" in str(err):
             Logger.log(LogChannel.ERRORS, "Server too busy or down. Try again later")
             exit(1)
+
+    def download_lyrics(
+        self, playable: PlayableType, track: Track, output: Path
+    ) -> None:
+        if playable.type == PlayableType.TRACK and self.__config.lyrics_file:
+            if not self.__session.is_premium():
+                Logger.log(
+                    LogChannel.SKIPS,
+                    f'Failed to save lyrics for "{track.name}": Lyrics are only available to premium users',
+                )
+            else:
+                with Loader("Fetching lyrics..."):
+                    try:
+                        track.get_lyrics().save(output)
+                    except FileNotFoundError as e:
+                        Logger.log(LogChannel.SKIPS, str(e))
